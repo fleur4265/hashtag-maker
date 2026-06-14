@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>mi's タグメーカー 🧸</title>
+<style>
+  :root {
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --beige: #e8dfd3;
+    --brown: #8b7355;
+    --brown-light: #b5a48e;
+    --pink: #e8d5cc;
+    --text: #6b5d4f;
+    --accent: #c9a892;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px 16px 40px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 4px;
+    color: var(--brown);
+    letter-spacing: 2px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 12px;
+    color: var(--brown-light);
+    margin-bottom: 20px;
+  }
+  .cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .cat-btn {
+    border: 1.5px solid var(--beige);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .cat-btn.active {
+    background: var(--brown);
+    border-color: var(--brown);
+    color: #fff;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 2px 12px rgba(139,115,85,0.08);
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 13px;
+    color: var(--brown-light);
+    margin-bottom: 12px;
+    font-weight: normal;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tag {
+    border: 1.5px solid var(--pink);
+    background: #fdf9f7;
+    color: var(--text);
+    border-radius: 16px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    position: relative;
+  }
+  .tag.on {
+    background: var(--pink);
+    border-color: var(--accent);
+    color: var(--brown);
+    font-weight: bold;
+  }
+  .tag.deletable.on { padding-right: 12px; }
+  .tag .del {
+    display: none;
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 18px; height: 18px;
+    background: var(--brown-light);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    line-height: 18px;
+    text-align: center;
+  }
+  body.edit-mode .tag.deletable .del { display: block; }
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .add-row input {
+    flex: 1;
+    border: 1.5px solid var(--beige);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fdfcfa;
+    outline: none;
+  }
+  .add-row input:focus { border-color: var(--accent); }
+  .add-row button {
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .preview {
+    width: 100%;
+    border: 1.5px solid var(--beige);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fdfcfa;
+    resize: none;
+    min-height: 80px;
+    line-height: 1.7;
+  }
+  .copy-btn {
+    width: 100%;
+    border: none;
+    background: var(--brown);
+    color: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 10px;
+    letter-spacing: 1px;
+    transition: transform 0.1s;
+  }
+  .copy-btn:active { transform: scale(0.98); }
+  .copy-btn.done { background: #a8bca1; }
+  .count {
+    text-align: right;
+    font-size: 11px;
+    color: var(--brown-light);
+    margin-top: 6px;
+  }
+  .edit-toggle {
+    display: block;
+    margin: 0 auto;
+    border: none;
+    background: none;
+    color: var(--brown-light);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+<h1>🧸 mi's タグメーカー</h1>
+<p class="subtitle">カテゴリを選んで、タグをタップして、コピーするだけ</p>
+
+<div class="cats" id="cats"></div>
+
+<div class="card">
+  <h2>タグをタップで ON / OFF（ピンク = 使う）</h2>
+  <div class="tags" id="tags"></div>
+  <div class="add-row">
+    <input id="newTag" type="text" placeholder="タグを追加（#なしでOK）">
+    <button onclick="addTag()">追加</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>プレビュー</h2>
+  <textarea class="preview" id="preview" readonly></textarea>
+  <div class="count" id="count"></div>
+  <button class="copy-btn" id="copyBtn" onclick="copyTags()">コピーする ♡</button>
+</div>
+
+<button class="edit-toggle" onclick="toggleEdit()">タグの削除モード切替</button>
+
+<script>
+const DEFAULT_DATA = {
+  "共通": ["楽天ROOMに載せてます", "楽天購入品", "大人かわいい", "くすみカラー", "淡色", "淡色女子", "お買い物マラソン"],
+  "バッグ・ポーチ": ["バッグ", "トートバッグ", "ショルダーバッグ", "ポーチ", "化粧ポーチ", "ミニ財布", "通勤バッグ", "軽量バッグ", "プチプラバッグ"],
+  "スマホアクセ": ["スマホケース", "iPhoneケース", "スマホショルダー", "スマホリング", "韓国スマホケース", "クリアケース", "iPhone17"],
+  "ファッション": ["プチプラコーデ", "大人カジュアル", "きれいめコーデ", "オフィスカジュアル", "カーディガン", "ワンピース", "UV対策"],
+  "コスメ": ["スキンケア", "コスメ好きさんと繋がりたい", "ヘアケア", "ヘアオイル", "リップ", "毛穴ケア", "乾燥肌"],
+  "インテリア": ["淡色インテリア", "ベージュインテリア", "韓国インテリア", "収納", "一人暮らし", "おうち時間", "癒しグッズ"]
+};
+
+function loadData() {
+  try {
+    return JSON.parse(localStorage.getItem("tagData") || "null") || DEFAULT_DATA;
+  } catch (e) {
+    return DEFAULT_DATA;
+  }
+}
+let data = loadData();
+let selected = new Set();
+let currentCat = "共通";
+
+function save() {
+  try { localStorage.setItem("tagData", JSON.stringify(data)); } catch (e) {}
+}
+
+function renderCats() {
+  const el = document.getElementById("cats");
+  el.innerHTML = "";
+  Object.keys(data).forEach(cat => {
+    const b = document.createElement("button");
+    b.className = "cat-btn" + (cat === currentCat ? " active" : "");
+    b.textContent = cat;
+    b.onclick = () => { currentCat = cat; renderCats(); renderTags(); };
+    el.appendChild(b);
+  });
+}
+
+function renderTags() {
+  const el = document.getElementById("tags");
+  el.innerHTML = "";
+  data[currentCat].forEach(t => {
+    const s = document.createElement("span");
+    s.className = "tag deletable" + (selected.has(t) ? " on" : "");
+    s.textContent = "#" + t;
+    s.onclick = (e) => {
+      if (document.body.classList.contains("edit-mode")) return;
+      selected.has(t) ? selected.delete(t) : selected.add(t);
+      renderTags(); renderPreview();
+    };
+    const del = document.createElement("span");
+    del.className = "del";
+    del.textContent = "×";
+    del.onclick = (e) => {
+      e.stopPropagation();
+      data[currentCat] = data[currentCat].filter(x => x !== t);
+      selected.delete(t);
+      save(); renderTags(); renderPreview();
+    };
+    s.appendChild(del);
+    el.appendChild(s);
+  });
+}
+
+function renderPreview() {
+  const tags = [...selected].map(t => "#" + t).join(" ");
+  document.getElementById("preview").value = tags;
+  document.getElementById("count").textContent = selected.size + " 個選択中";
+}
+
+function addTag() {
+  const input = document.getElementById("newTag");
+  let v = input.value.trim().replace(/^#/, "");
+  if (!v) return;
+  if (!data[currentCat].includes(v)) {
+    data[currentCat].push(v);
+    save();
+  }
+  selected.add(v);
+  input.value = "";
+  renderTags(); renderPreview();
+}
+
+document.getElementById("newTag").addEventListener("keydown", e => {
+  if (e.key === "Enter") addTag();
+});
+
+function copyTags() {
+  const text = document.getElementById("preview").value;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById("copyBtn");
+    btn.textContent = "コピーしました ✅";
+    btn.classList.add("done");
+    setTimeout(() => {
+      btn.textContent = "コピーする ♡";
+      btn.classList.remove("done");
+    }, 1500);
+  }).catch(() => {
+    // iOS Safari fallback
+    const ta = document.getElementById("preview");
+    ta.removeAttribute("readonly");
+    ta.select();
+    document.execCommand("copy");
+    ta.setAttribute("readonly", "");
+    const btn = document.getElementById("copyBtn");
+    btn.textContent = "コピーしました ✅";
+    setTimeout(() => { btn.textContent = "コピーする ♡"; }, 1500);
+  });
+}
+
+function toggleEdit() {
+  document.body.classList.toggle("edit-mode");
+}
+
+renderCats(); renderTags(); renderPreview();
+</script>
+</body>
+</html>
