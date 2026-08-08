@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🍳 recipe</title>
+<style>
+  :root {
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --beige: #e8dfd3;
+    --brown: #8b7355;
+    --brown-light: #b5a48e;
+    --accent: #c9a892;
+    --pink: #f0e6e1;
+    --text: #6b5d4f;
+    --subtext: #a89888;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 100px;
+  }
+
+  header {
+    background: var(--card);
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--beige);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 {
+    font-size: 22px;
+    color: var(--brown);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .search-box {
+    display: flex;
+    align-items: center;
+    background: var(--bg);
+    border: 1.5px solid var(--beige);
+    border-radius: 12px;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .search-box input {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    width: 100%;
+    outline: none;
+  }
+  .search-box input::placeholder { color: var(--subtext); }
+  .search-icon { color: var(--subtext); font-size: 16px; }
+
+  /* 追加ボタン */
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    background: var(--brown);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(139,115,85,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+  }
+
+  /* モーダル */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 30;
+    align-items: flex-end;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px 40px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--brown);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .modal label {
+    display: block;
+    font-size: 12px;
+    color: var(--subtext);
+    margin-bottom: 4px;
+    margin-top: 12px;
+  }
+  .modal input[type="text"],
+  .modal input[type="url"],
+  .modal textarea {
+    width: 100%;
+    border: 1.5px solid var(--beige);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fdfcfa;
+    outline: none;
+  }
+  .modal input:focus,
+  .modal textarea:focus { border-color: var(--accent); }
+  .modal textarea { resize: none; height: 72px; }
+
+  /* 材料タグ入力 */
+  .tag-input-area {
+    border: 1.5px solid var(--beige);
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: #fdfcfa;
+    min-height: 44px;
+  }
+  .tag-input-area.focus { border-color: var(--accent); }
+  .tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .tag-chip {
+    background: var(--pink);
+    color: var(--brown);
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tag-chip .del { cursor: pointer; color: var(--subtext); font-size: 12px; }
+  .tag-input-area input {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+  }
+  .tag-hint { font-size: 11px; color: var(--subtext); margin-top: 4px; }
+
+  /* 画像アップロード */
+  .img-upload {
+    border: 1.5px dashed var(--beige);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--subtext);
+    position: relative;
+  }
+  .img-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .img-preview {
+    width: 100%;
+    max-height: 160px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  .modal-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .btn-cancel {
+    flex: 1;
+    border: 1.5px solid var(--beige);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-save {
+    flex: 2;
+    border: none;
+    background: var(--brown);
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* レシピ一覧 */
+  .list { padding: 16px; }
+  .recipe-card {
+    background: var(--card);
+    border-radius: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(139,115,85,0.06);
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .recipe-card-img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+  }
+  .recipe-card-body { padding: 14px; }
+  .recipe-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .recipe-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .recipe-tag {
+    background: var(--bg);
+    color: var(--subtext);
+    border-radius: 10px;
+    padding: 3px 10px;
+    font-size: 12px;
+  }
+  .recipe-memo {
+    font-size: 12px;
+    color: var(--subtext);
+    line-height: 1.5;
+  }
+  .recipe-links {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .recipe-link-btn {
+    border: 1.5px solid var(--beige);
+    background: var(--card);
+    color: var(--brown);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .recipe-del-btn {
+    border: none;
+    background: none;
+    color: var(--beige);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: auto;
+    display: block;
+  }
+  .recipe-del-btn:hover { color: var(--subtext); }
+
+  /* 空の状態 */
+  .empty {
+    text-align: center;
+    color: var(--subtext);
+    padding: 60px 20px;
+    font-size: 14px;
+    line-height: 2.2;
+  }
+  .empty .emoji { font-size: 40px; display: block; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍳 recipe</h1>
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search" placeholder="料理名・材料で検索…" oninput="renderList()">
+  </div>
+</header>
+
+<div class="list" id="list"></div>
+
+<button class="fab" onclick="openModal()">＋</button>
+
+<!-- 追加モーダル -->
+<div class="modal-bg" id="modal-bg" onclick="onModalBgClick(event)">
+  <div class="modal">
+    <div class="modal-title">レシピを追加</div>
+
+    <label>料理名 *</label>
+    <input type="text" id="r-name" placeholder="例：豚キムチ炒め">
+
+    <label>材料タグ（検索用）</label>
+    <div class="tag-input-area" id="tag-area">
+      <div class="tag-chips" id="tag-chips"></div>
+      <input type="text" id="tag-input" placeholder="材料を入力してEnter" onkeydown="onTagKey(event)">
+    </div>
+    <div class="tag-hint">Enterで追加、×で削除</div>
+
+    <label>参照元URL</label>
+    <input type="url" id="r-url" placeholder="https://…">
+
+    <label>画像</label>
+    <div class="img-upload">
+      📷 タップして画像を選ぶ
+      <input type="file" id="r-img" accept="image/*" onchange="onImgChange()">
+    </div>
+    <img class="img-preview" id="img-preview">
+
+    <label>メモ</label>
+    <textarea id="r-memo" placeholder="アレンジ・コツなど…"></textarea>
+
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-save" onclick="saveRecipe()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function load(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; }
+}
+function save(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+
+let recipes = load('recipes', []);
+let currentTags = [];
+let currentImg = null;
+
+// ---- モーダル ----
+function openModal() {
+  currentTags = [];
+  currentImg = null;
+  document.getElementById('r-name').value = '';
+  document.getElementById('r-url').value = '';
+  document.getElementById('r-memo').value = '';
+  document.getElementById('tag-input').value = '';
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('r-img').value = '';
+  renderTagChips();
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+}
+
+function onModalBgClick(e) {
+  if (e.target === document.getElementById('modal-bg')) closeModal();
+}
+
+// ---- タグ入力 ----
+function onTagKey(e) {
+  if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,/g, '');
+    if (val && !currentTags.includes(val)) {
+      currentTags.push(val);
+      renderTagChips();
+    }
+    e.target.value = '';
+  }
+}
+
+function removeTag(i) {
+  currentTags.splice(i, 1);
+  renderTagChips();
+}
+
+function renderTagChips() {
+  document.getElementById('tag-chips').innerHTML = currentTags.map((t, i) =>
+    `<span class="tag-chip">${escHtml(t)}<span class="del" onclick="removeTag(${i})">×</span></span>`
+  ).join('');
+}
+
+// ---- 画像 ----
+function onImgChange() {
+  const file = document.getElementById('r-img').files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentImg = e.target.result;
+    const prev = document.getElementById('img-preview');
+    prev.src = currentImg;
+    prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ---- 保存 ----
+function saveRecipe() {
+  const name = document.getElementById('r-name').value.trim();
+  if (!name) { alert('料理名を入力してください'); return; }
+
+  // タグ入力欄に未確定のものがあれば追加
+  const pending = document.getElementById('tag-input').value.trim();
+  if (pending && !currentTags.includes(pending)) currentTags.push(pending);
+
+  recipes.unshift({
+    id: Date.now(),
+    name,
+    tags: [...currentTags],
+    url: document.getElementById('r-url').value.trim(),
+    img: currentImg,
+    memo: document.getElementById('r-memo').value.trim(),
+  });
+  save('recipes', recipes);
+  closeModal();
+  renderList();
+}
+
+// ---- 削除 ----
+function deleteRecipe(id, e) {
+  e.stopPropagation();
+  if (!confirm('このレシピを削除しますか？')) return;
+  recipes = recipes.filter(r => r.id !== id);
+  save('recipes', recipes);
+  renderList();
+}
+
+// ---- 一覧 ----
+function renderList() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let filtered = recipes;
+  if (q) {
+    filtered = recipes.filter(r =>
+      r.name.toLowerCase().includes(q) ||
+      r.tags.some(t => t.toLowerCase().includes(q))
+    );
+  }
+
+  const el = document.getElementById('list');
+  if (filtered.length === 0) {
+    el.innerHTML = q
+      ? `<div class="empty"><span class="emoji">🔍</span>「${escHtml(q)}」のレシピは見つかりませんでした</div>`
+      : `<div class="empty"><span class="emoji">🍳</span>レシピがまだありません<br>右下の ＋ から追加してみてください</div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(r => `
+    <div class="recipe-card">
+      ${r.img ? `<img class="recipe-card-img" src="${r.img}" alt="${escHtml(r.name)}">` : ''}
+      <div class="recipe-card-body">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="recipe-name">${escHtml(r.name)}</div>
+          <button class="recipe-del-btn" onclick="deleteRecipe(${r.id}, event)">×</button>
+        </div>
+        ${r.tags.length > 0 ? `<div class="recipe-tags">${r.tags.map(t => `<span class="recipe-tag"># ${escHtml(t)}</span>`).join('')}</div>` : ''}
+        ${r.memo ? `<div class="recipe-memo">${escHtml(r.memo)}</div>` : ''}
+        ${r.url ? `<div class="recipe-links"><a class="recipe-link-btn" href="${escHtml(r.url)}" target="_blank">🔗 レシピを見る</a></div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+renderList();
+</script>
+</body>
+</html>
