@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🧸 memo</title>
+<style>
+  :root {
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --beige: #e8dfd3;
+    --brown: #8b7355;
+    --brown-light: #b5a48e;
+    --pink: #f0e6e1;
+    --accent: #c9a892;
+    --text: #6b5d4f;
+    --subtext: #a89888;
+    --green: #a8b89a;
+    --blue: #b0c4cc;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+  }
+
+  /* ヘッダー */
+  header {
+    background: var(--card);
+    padding: 20px 20px 0;
+    border-bottom: 1px solid var(--beige);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 {
+    font-size: 22px;
+    color: var(--brown);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--subtext);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    color: var(--brown);
+    border-bottom: 2px solid var(--brown);
+    font-weight: bold;
+  }
+
+  /* コンテンツ */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* タスク追加フォーム */
+  .add-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(139,115,85,0.06);
+  }
+  .add-card input[type="text"],
+  .add-card input[type="date"] {
+    width: 100%;
+    border: 1.5px solid var(--beige);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fdfcfa;
+    margin-bottom: 10px;
+    outline: none;
+  }
+  .add-card input:focus { border-color: var(--accent); }
+  .priority-select {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .priority-btn {
+    flex: 1;
+    border: 1.5px solid var(--beige);
+    background: var(--card);
+    border-radius: 10px;
+    padding: 8px 4px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text);
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .priority-btn.selected {
+    background: var(--pink);
+    border-color: var(--accent);
+    font-weight: bold;
+    font-size: 13px;
+  }
+  .add-btn {
+    width: 100%;
+    border: none;
+    background: var(--brown);
+    color: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* フィルター */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .filter-btn {
+    border: 1.5px solid var(--beige);
+    background: var(--card);
+    color: var(--subtext);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .filter-btn.active { background: var(--brown); border-color: var(--brown); color: #fff; }
+
+  /* タスクカード */
+  .task-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(139,115,85,0.06);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: opacity 0.2s;
+  }
+  .task-card.done { opacity: 0.45; }
+  .task-check {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--beige);
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: all 0.2s;
+  }
+  .task-check.checked { background: var(--accent); border-color: var(--accent); }
+  .task-check.checked::after { content: "✓"; color: #fff; font-size: 13px; }
+  .task-body { flex: 1; }
+  .task-title {
+    font-size: 15px;
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+  .task-card.done .task-title { text-decoration: line-through; color: var(--subtext); }
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--subtext);
+  }
+  .priority-badge { font-size: 14px; }
+  .date-badge {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+  .date-badge.overdue { background: #f5e6e6; color: #c47a7a; }
+  .task-del {
+    color: var(--beige);
+    cursor: pointer;
+    font-size: 18px;
+    flex-shrink: 0;
+    padding: 2px 4px;
+  }
+  .task-del:hover { color: var(--subtext); }
+
+  /* 欲しいものリスト */
+  .wish-add-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(139,115,85,0.06);
+  }
+  .wish-add-card input,
+  .wish-add-card textarea {
+    width: 100%;
+    border: 1.5px solid var(--beige);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fdfcfa;
+    margin-bottom: 10px;
+    outline: none;
+  }
+  .wish-add-card textarea { resize: none; height: 60px; }
+  .wish-add-card input:focus,
+  .wish-add-card textarea:focus { border-color: var(--accent); }
+  .wish-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(139,115,85,0.06);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .wish-card.bought { opacity: 0.45; }
+  .wish-check {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--beige);
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    transition: all 0.2s;
+  }
+  .wish-check.checked { background: var(--green); border-color: var(--green); }
+  .wish-check.checked::after { content: "✓"; color: #fff; font-size: 13px; }
+  .wish-body { flex: 1; }
+  .wish-name {
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .wish-card.bought .wish-name { text-decoration: line-through; color: var(--subtext); }
+  .wish-budget {
+    font-size: 12px;
+    color: var(--subtext);
+    margin-bottom: 4px;
+  }
+  .wish-memo {
+    font-size: 12px;
+    color: var(--subtext);
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+  .wish-del {
+    color: var(--beige);
+    cursor: pointer;
+    font-size: 18px;
+    flex-shrink: 0;
+    padding: 2px 4px;
+  }
+
+  /* 空の状態 */
+  .empty {
+    text-align: center;
+    color: var(--subtext);
+    padding: 40px 20px;
+    font-size: 14px;
+    line-height: 2;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧸 memo</h1>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('task')">タスク</div>
+    <div class="tab" onclick="switchTab('wish')">欲しいもの</div>
+  </div>
+</header>
+
+<!-- タスクページ -->
+<div class="page active" id="page-task">
+  <div class="add-card">
+    <input type="text" id="task-input" placeholder="やることを入力…">
+    <div class="priority-select">
+      <button class="priority-btn selected" data-p="1" onclick="selectPriority(1)">🌷 絶対やる</button>
+      <button class="priority-btn" data-p="2" onclick="selectPriority(2)">🌿</button>
+      <button class="priority-btn" data-p="3" onclick="selectPriority(3)">🫧</button>
+    </div>
+    <input type="date" id="task-date">
+    <button class="add-btn" onclick="addTask()">追加する</button>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="setFilter('all')">すべて</button>
+    <button class="filter-btn" onclick="setFilter('1')">🌷 絶対やる</button>
+    <button class="filter-btn" onclick="setFilter('2')">🌿 できればやる</button>
+    <button class="filter-btn" onclick="setFilter('3')">🫧 やってみたい</button>
+    <button class="filter-btn" onclick="setFilter('done')">完了済み</button>
+  </div>
+
+  <div id="task-list"></div>
+</div>
+
+<!-- 欲しいものページ -->
+<div class="page" id="page-wish">
+  <div class="wish-add-card">
+    <input type="text" id="wish-name" placeholder="商品名">
+    <input type="text" id="wish-budget" placeholder="予算（例：¥3,000）">
+    <textarea id="wish-memo" placeholder="メモ（任意）"></textarea>
+    <button class="add-btn" onclick="addWish()">追加する</button>
+  </div>
+  <div id="wish-list"></div>
+</div>
+
+<script>
+// ---- データ ----
+function load(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; }
+}
+function save(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+
+let tasks = load('memo-tasks', []);
+let wishes = load('memo-wishes', []);
+let currentPriority = 1;
+let currentFilter = 'all';
+
+// ---- タブ ----
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'task') || (i === 1 && tab === 'wish'));
+  });
+  document.getElementById('page-task').classList.toggle('active', tab === 'task');
+  document.getElementById('page-wish').classList.toggle('active', tab === 'wish');
+}
+
+// ---- タスク ----
+const PRIORITY = { 1: '🌷', 2: '🌿', 3: '🫧' };
+
+const PRIORITY_LABEL = { 1: '🌷 絶対やる', 2: '🌿 できればやる', 3: '🫧 やってみたい' };
+const PRIORITY_EMOJI = { 1: '🌷', 2: '🌿', 3: '🫧' };
+
+function selectPriority(p) {
+  currentPriority = p;
+  document.querySelectorAll('.priority-btn').forEach(b => {
+    const bp = parseInt(b.dataset.p);
+    const isSelected = bp === p;
+    b.classList.toggle('selected', isSelected);
+    b.textContent = isSelected ? PRIORITY_LABEL[bp] : PRIORITY_EMOJI[bp];
+  });
+}
+
+function addTask() {
+  const title = document.getElementById('task-input').value.trim();
+  if (!title) return;
+  tasks.unshift({
+    id: Date.now(),
+    title,
+    priority: currentPriority,
+    date: document.getElementById('task-date').value,
+    done: false
+  });
+  save('memo-tasks', tasks);
+  document.getElementById('task-input').value = '';
+  document.getElementById('task-date').value = '';
+  renderTasks();
+}
+
+function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t) { t.done = !t.done; save('memo-tasks', tasks); renderTasks(); }
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  save('memo-tasks', tasks);
+  renderTasks();
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach((b, i) => {
+    const filters = ['all', '1', '2', '3', 'done'];
+    b.classList.toggle('active', filters[i] === f);
+  });
+  renderTasks();
+}
+
+function isOverdue(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr) < new Date(new Date().toDateString());
+}
+
+function renderTasks() {
+  let filtered = tasks;
+  if (currentFilter === 'done') filtered = tasks.filter(t => t.done);
+  else if (currentFilter !== 'all') filtered = tasks.filter(t => !t.done && t.priority === parseInt(currentFilter));
+  else filtered = tasks.filter(t => !t.done);
+
+  // 優先度順ソート
+  filtered = [...filtered].sort((a, b) => a.priority - b.priority);
+
+  const el = document.getElementById('task-list');
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty">タスクはありません 🌿<br>上から追加してみてください</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(t => `
+    <div class="task-card ${t.done ? 'done' : ''}">
+      <div class="task-check ${t.done ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
+      <div class="task-body">
+        <div class="task-title">${escHtml(t.title)}</div>
+        <div class="task-meta">
+          <span class="priority-badge">${PRIORITY[t.priority]}</span>
+          ${t.date ? `<span class="date-badge ${isOverdue(t.date) && !t.done ? 'overdue' : ''}">${formatDate(t.date)}</span>` : ''}
+        </div>
+      </div>
+      <span class="task-del" onclick="deleteTask(${t.id})">×</span>
+    </div>
+  `).join('');
+}
+
+function formatDate(d) {
+  const dt = new Date(d + 'T00:00:00');
+  return `${dt.getMonth() + 1}/${dt.getDate()}`;
+}
+
+// ---- 欲しいものリスト ----
+function addWish() {
+  const name = document.getElementById('wish-name').value.trim();
+  if (!name) return;
+  wishes.unshift({
+    id: Date.now(),
+    name,
+    budget: document.getElementById('wish-budget').value.trim(),
+    memo: document.getElementById('wish-memo').value.trim(),
+    bought: false
+  });
+  save('memo-wishes', wishes);
+  document.getElementById('wish-name').value = '';
+  document.getElementById('wish-budget').value = '';
+  document.getElementById('wish-memo').value = '';
+  renderWishes();
+}
+
+function toggleWish(id) {
+  const w = wishes.find(w => w.id === id);
+  if (w) { w.bought = !w.bought; save('memo-wishes', wishes); renderWishes(); }
+}
+
+function deleteWish(id) {
+  wishes = wishes.filter(w => w.id !== id);
+  save('memo-wishes', wishes);
+  renderWishes();
+}
+
+function renderWishes() {
+  const el = document.getElementById('wish-list');
+  if (wishes.length === 0) {
+    el.innerHTML = '<div class="empty">欲しいものはありません 🌷<br>上から追加してみてください</div>';
+    return;
+  }
+  el.innerHTML = wishes.map(w => `
+    <div class="wish-card ${w.bought ? 'bought' : ''}">
+      <div class="wish-check ${w.bought ? 'checked' : ''}" onclick="toggleWish(${w.id})"></div>
+      <div class="wish-body">
+        <div class="wish-name">${escHtml(w.name)}</div>
+        ${w.budget ? `<div class="wish-budget">💰 ${escHtml(w.budget)}</div>` : ''}
+        ${w.memo ? `<div class="wish-memo">${escHtml(w.memo)}</div>` : ''}
+      </div>
+      <span class="wish-del" onclick="deleteWish(${w.id})">×</span>
+    </div>
+  `).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ---- 初期化 ----
+document.getElementById('task-input').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+document.getElementById('wish-name').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+renderTasks();
+renderWishes();
+</script>
+</body>
+</html>
