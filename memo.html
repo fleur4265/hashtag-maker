@@ -101,14 +101,19 @@
     background: var(--card);
     border-radius: 10px;
     padding: 8px 4px;
-    font-size: 13px;
+    font-size: 16px;
     cursor: pointer;
     font-family: inherit;
     color: var(--text);
     text-align: center;
     transition: all 0.15s;
   }
-  .priority-btn.selected { background: var(--pink); border-color: var(--accent); font-weight: bold; }
+  .priority-btn.selected {
+    background: var(--pink);
+    border-color: var(--accent);
+    font-weight: bold;
+    font-size: 13px;
+  }
   .add-btn {
     width: 100%;
     border: none;
@@ -303,8 +308,8 @@
     <input type="text" id="task-input" placeholder="やることを入力…">
     <div class="priority-select">
       <button class="priority-btn selected" data-p="1" onclick="selectPriority(1)">🌷 絶対やる</button>
-      <button class="priority-btn" data-p="2" onclick="selectPriority(2)">🌿 できればやる</button>
-      <button class="priority-btn" data-p="3" onclick="selectPriority(3)">🫧 やってみたい</button>
+      <button class="priority-btn" data-p="2" onclick="selectPriority(2)">🌿</button>
+      <button class="priority-btn" data-p="3" onclick="selectPriority(3)">🫧</button>
     </div>
     <input type="date" id="task-date">
     <button class="add-btn" onclick="addTask()">追加する</button>
@@ -358,10 +363,16 @@ function switchTab(tab) {
 // ---- タスク ----
 const PRIORITY = { 1: '🌷', 2: '🌿', 3: '🫧' };
 
+const PRIORITY_LABEL = { 1: '🌷 絶対やる', 2: '🌿 できればやる', 3: '🫧 やってみたい' };
+const PRIORITY_EMOJI = { 1: '🌷', 2: '🌿', 3: '🫧' };
+
 function selectPriority(p) {
   currentPriority = p;
   document.querySelectorAll('.priority-btn').forEach(b => {
-    b.classList.toggle('selected', parseInt(b.dataset.p) === p);
+    const bp = parseInt(b.dataset.p);
+    const isSelected = bp === p;
+    b.classList.toggle('selected', isSelected);
+    b.textContent = isSelected ? PRIORITY_LABEL[bp] : PRIORITY_EMOJI[bp];
   });
 }
 
