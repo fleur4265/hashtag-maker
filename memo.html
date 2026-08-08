@@ -75,10 +75,8 @@
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: 0 2px 8px rgba(139,115,85,0.06);
-    overflow: hidden;
   }
-  .add-card input[type="text"],
-  .add-card input[type="date"] {
+  .add-card input[type="text"] {
     width: 100%;
     border: 1.5px solid var(--beige);
     border-radius: 10px;
@@ -89,7 +87,21 @@
     background: #fdfcfa;
     margin-bottom: 10px;
     outline: none;
-    box-sizing: border-box;
+  }
+  .add-card input[type="date"] {
+    width: 100%;
+    max-width: 100%;
+    border: 1.5px solid var(--beige);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fdfcfa;
+    margin-bottom: 10px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
   }
   .add-card input:focus { border-color: var(--accent); }
   .priority-select {
